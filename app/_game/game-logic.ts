@@ -19,14 +19,18 @@ export function playMove(board: Board, index: number, player: Player): Board {
   return board.map((cell, position) => position === index ? player : cell);
 }
 
-export type RoundResult = { winner: Player | "draw"; line: number[] };
+export type RoundResult = { winner: Player | "draw"; lines: number[][] };
 
 export function getResult(board: Board): RoundResult | null {
   const line = winningLines.find(([a, b, c]) =>
     board[a] !== null && board[a] === board[b] && board[a] === board[c],
   );
-  if (line) return { winner: board[line[0]]!, line };
-  if (board.every(Boolean)) return { winner: "draw", line: [] };
+  if (line) {
+    const winner = board[line[0]]!;
+    const lines = winningLines.filter((cells) => cells.every((index) => board[index] === winner));
+    return { winner, lines };
+  }
+  if (board.every(Boolean)) return { winner: "draw", lines: [] };
   return null;
 }
 

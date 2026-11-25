@@ -9,8 +9,11 @@ type GameState = {
   picks: Record<Player, Emoji>;
   computerModePlayerEmoji: Emoji;
   board: Board;
+  starter: Player;
   turn: Player;
+  lastMove: number | null;
   scores: Record<GameMode, Score>;
+  resetSnapshot: Partial<Record<GameMode, Score>>;
 };
 type GameAction =
   | { type: "mode"; mode: GameMode }
@@ -18,10 +21,11 @@ type GameAction =
   | { type: "emoji"; player: Player; emoji: Emoji }
   | { type: "move"; player: Player; index: number; boardSnapshot: Board }
   | { type: "start-round" }
-  | { type: "reset-scores" };
+  | { type: "reset-scores" }
+  | { type: "undo-score-reset" };
 
-function freshRound() {
-  return { board: Array<Player | null>(9).fill(null), turn: "one" as const };
+function freshRound(starter: Player = "one") {
+  return { board: Array<Player | null>(9).fill(null), starter, turn: starter, lastMove: null };
 }
 
 function emptyScore(): Score {
@@ -34,6 +38,7 @@ export const initialGame: GameState = {
   picks: { one: presets.one[0], two: presets.two[0] },
   computerModePlayerEmoji: presets.one[0],
   scores: { local: emptyScore(), computer: emptyScore() },
+  resetSnapshot: {},
   ...freshRound(),
 };
 
@@ -52,10 +57,30 @@ export function updateGame(game: GameState, action: GameAction): GameState {
       if (game.picks[otherPlayer(action.player)].symbol === action.emoji.symbol) return game;
       return { ...game, picks: { ...game.picks, [action.player]: action.emoji } };
     }
-    case "start-round":
-      return { ...game, ...freshRound() };
-    case "reset-scores":
-      return { ...game, scores: { ...game.scores, [game.mode]: emptyScore() } };
+    case "start-round": {
+      const rematch = game.mode === "local" && getResult(game.board);
+      return { ...game, ...freshRound(rematch ? otherPlayer(game.starter) : game.starter) };
+    }
+    case "reset-scores": {
+      const score = game.scores[game.mode];
+      if (score.one + score.two + score.draw === 0) return game;
+      return {
+        ...game,
+        scores: { ...game.scores, [game.mode]: emptyScore() },
+        resetSnapshot: { ...game.resetSnapshot, [game.mode]: score },
+      };
+    }
+    case "undo-score-reset": {
+      const previous = game.resetSnapshot[game.mode];
+      if (!previous) return game;
+      const score = game.scores[game.mode];
+      const restored = { one: previous.one + score.one, two: previous.two + score.two, draw: previous.draw + score.draw };
+      return {
+        ...game,
+        scores: { ...game.scores, [game.mode]: restored },
+        resetSnapshot: { ...game.resetSnapshot, [game.mode]: undefined },
+      };
+    }
     case "move": {
       // A scheduled computer move may belong to a board that has since been replaced.
       if (
@@ -69,12 +94,13 @@ export function updateGame(game: GameState, action: GameAction): GameState {
 
       const board = playMove(game.board, action.index, action.player);
       const result = getResult(board);
-      if (!result) return { ...game, board, turn: otherPlayer(game.turn) };
+      if (!result) return { ...game, board, lastMove: action.index, turn: otherPlayer(game.turn) };
 
       const score = game.scores[game.mode];
       return {
         ...game,
         board,
+        lastMove: action.index,
         scores: {
           ...game.scores,
           [game.mode]: { ...score, [result.winner]: score[result.winner] + 1 },
