@@ -34,6 +34,28 @@ export function GameBoard({ board, result, thinking, turn, lastMove, names, mark
     }
   }, [outcome]);
 
+  useEffect(() => {
+    const element = boardElement.current;
+    if (outcome !== "win" || !element) return;
+
+    let inViewport = false;
+    function updateTilt() {
+      element?.toggleAttribute("data-tilt-paused", !inViewport || document.hidden);
+    }
+
+    const observer = new IntersectionObserver(([entry]) => {
+      inViewport = entry.isIntersecting;
+      updateTilt();
+    });
+    observer.observe(element);
+    document.addEventListener("visibilitychange", updateTilt);
+    return () => {
+      observer.disconnect();
+      document.removeEventListener("visibilitychange", updateTilt);
+      element.removeAttribute("data-tilt-paused");
+    };
+  }, [outcome]);
+
   function focusNeighbor(event: KeyboardEvent<HTMLDivElement>) {
     if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
     const columns = 3;
@@ -105,7 +127,7 @@ export function GameBoard({ board, result, thinking, turn, lastMove, names, mark
               {cell && (
                 <span
                   className={styles.mark}
-                  style={winning ? { animationDelay: `${winStep * 45}ms` } : undefined}
+                  style={winning ? { animationDelay: `${winStep * 45}ms, calc(${winStep * 45}ms + var(--win-entrance))` } : undefined}
                   aria-hidden="true"
                 >
                   {marks[cell].symbol}

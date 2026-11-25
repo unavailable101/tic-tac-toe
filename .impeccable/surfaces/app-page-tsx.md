@@ -17,7 +17,7 @@ Mode: Operate. The surface is the game at /.
 
 **STORY** — Choose an opponent or start immediately. Use Change sticker to open a short list or browse the full library. Protect the current round when changing opponents or difficulty. Keep the result and the next round action together. Alternate who opens local rematches.
 
-**FIRST VIEWPORT** — A compact masthead and mode controls sit above a strip with both marks and tallies. A full-width 3×3 grid takes the most space. Empty squares preview the current sticker on hover and keyboard focus. The latest move carries a corner dot. Winning tiles take their player’s color, the winning stickers settle once into a larger size, and the other placed stickers shrink. Reduced motion keeps the size difference visible with still stickers.
+**FIRST VIEWPORT** — A compact masthead and mode controls sit above a strip with both marks and tallies. A full-width 3×3 grid takes the most space. Empty squares preview the current sticker on hover and keyboard focus. The latest move carries a corner dot. Winning tiles take their player’s color, the winning stickers settle into a larger size, and the other placed stickers shrink. The winners tilt briefly every three seconds until the next round. Reduced motion keeps the size difference visible with still stickers.
 
 **FORM** — seed: none (pinned) “the sticker duel” and “for the rest, i would like to go with your suggested change.” The approved composition shrinks the header, brings the board up, and puts both marks and tallies in a strip next to the board.
 

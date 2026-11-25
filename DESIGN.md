@@ -220,7 +220,7 @@ A rounded square holds each player's mark and grows from 2.75rem to 3.75rem. The
 
 Empty squares have paper-toned fills and individual edges. Playable squares preview the active sticker on hover or keyboard focus. Occupied squares use the player's paired backing and ink. A corner dot identifies the most recent move while the round is in progress. Winning squares add a 2px outline and deepen their backing by mixing 12% of the player ink into the tint. Above the board, the result banner uses the corresponding player or draw pair and places Play again alongside the outcome text. Both winning lines are emphasized when a single move completes two.
 
-New marks settle into their tilt over 180ms. After a win, the winning stickers settle to 1.26× once, staggered in line order, and the other placed stickers shrink to 0.78×. The winning tally gives a brief tick. Reduced motion shows both sizes and the updated score immediately.
+New marks settle into their tilt over 180ms. After a win, the winning stickers settle to 1.26×, staggered in line order, and the other placed stickers shrink to 0.78×. The winners then tilt briefly every three seconds until the next round. The loop pauses offscreen or in a hidden tab. The winning tally gives a brief tick. Reduced motion shows both sizes and the updated score immediately.
 
 ### Dialogs and emoji choices
 

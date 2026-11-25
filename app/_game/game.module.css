@@ -388,9 +388,16 @@
 }
 
 .square[data-winning] .mark {
+  --win-entrance: 380ms;
   scale: 1.26;
-  animation: win-mark 380ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  animation:
+    win-mark var(--win-entrance) cubic-bezier(0.16, 1, 0.3, 1) backwards,
+    win-tilt 3s ease-in-out infinite;
   transition: none;
+}
+
+.board[data-tilt-paused] .square[data-winning] .mark {
+  animation-play-state: running, paused;
 }
 
 @keyframes place-mark {
@@ -402,6 +409,13 @@
   0% { transform: scale(0.79); }
   52% { transform: scale(1.08) rotate(var(--sticker-angle)); }
   100% { transform: none; }
+}
+
+@keyframes win-tilt {
+  0%, 22%, 100% { transform: none; }
+  5% { transform: rotate(-10deg); }
+  11% { transform: rotate(10deg); }
+  17% { transform: rotate(-5deg); }
 }
 
 @keyframes score-tick {
