@@ -1,6 +1,8 @@
 export type Player = "one" | "two";
+// A board contains nine cells in row-major order.
 export type Board = (Player | null)[];
-export type Difficulty = "Easy" | "Medium" | "Hard";
+export const difficulties = ["Easy", "Medium", "Hard"] as const;
+export type Difficulty = (typeof difficulties)[number];
 
 const winningLines = [
   [0, 1, 2], [3, 4, 5], [6, 7, 8],
@@ -12,11 +14,14 @@ export function otherPlayer(player: Player): Player {
   return player === "one" ? "two" : "one";
 }
 
+// Callers supply a nine-cell board and the index of an open square.
 export function playMove(board: Board, index: number, player: Player): Board {
   return board.map((cell, position) => position === index ? player : cell);
 }
 
-export function getResult(board: Board): { winner: Player | "draw"; line: number[] } | null {
+export type RoundResult = { winner: Player | "draw"; line: number[] };
+
+export function getResult(board: Board): RoundResult | null {
   const line = winningLines.find(([a, b, c]) =>
     board[a] !== null && board[a] === board[b] && board[a] === board[c],
   );
