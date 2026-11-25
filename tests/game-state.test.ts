@@ -15,11 +15,13 @@ function finishPlayerOneWin(game: GameState) {
 
 test("scores a finished round once and ignores occupied or out-of-turn moves", () => {
   const started = move(initialGame, 0);
+  assert.equal(started.lastMove, 0);
   assert.equal(move(started, 0), started);
   assert.equal(updateGame(started, {
     type: "move", player: "one", index: 1, boardSnapshot: started.board,
   }), started);
   const finished = finishPlayerOneWin(initialGame);
+  assert.equal(finished.lastMove, 2);
   assert.deepEqual(finished.scores.local, { one: 1, two: 0, draw: 0 });
   assert.equal(move(finished, 5), finished);
   const draw = [0, 1, 2, 4, 3, 5, 7, 6, 8].reduce(move, initialGame);
@@ -39,15 +41,50 @@ test("tracks scores by mode and resets only the active score without clearing th
   assert.equal(reset.scores.local.one, 1);
 });
 
-test("a new round preserves scores and emoji choices and starts with player one", () => {
+test("a local rematch preserves scores and emoji choices and alternates the starter", () => {
   const emoji = emojiLibrary[10];
   const picked = updateGame(initialGame, { type: "emoji", player: "one", emoji });
   const finished = finishPlayerOneWin(picked);
   const next = updateGame(finished, { type: "start-round" });
   assert.deepEqual(next.board, initialGame.board);
-  assert.equal(next.turn, "one");
+  assert.equal(next.turn, "two");
+  assert.equal(next.lastMove, null);
   assert.equal(next.picks.one, emoji);
   assert.equal(next.scores, finished.scores);
+
+  const restarted = updateGame(move(next, 0), { type: "start-round" });
+  assert.equal(restarted.turn, "two");
+  const draw = [0, 1, 2, 4, 3, 5, 7, 6, 8].reduce(move, restarted);
+  assert.equal(draw.scores.local.draw, 1);
+  assert.equal(updateGame(draw, { type: "start-round" }).turn, "one");
+});
+
+test("a double-line finish scores once and a solo rematch starts with the human", () => {
+  const finish = [0, 1, 2, 3, 6, 5, 8, 7, 4];
+  const local = finish.reduce(move, initialGame);
+  assert.equal(local.scores.local.one, 1);
+
+  const computer = updateGame(initialGame, { type: "mode", mode: "computer" });
+  const solo = finish.reduce(move, computer);
+  assert.equal(solo.scores.computer.one, 1);
+  assert.equal(updateGame(solo, { type: "start-round" }).turn, "one");
+});
+
+test("undo restores the active mode’s reset score without discarding subsequent rounds", () => {
+  const localWin = finishPlayerOneWin(initialGame);
+  const reset = updateGame(localWin, { type: "reset-scores" });
+  assert.equal(updateGame(reset, { type: "reset-scores" }), reset);
+
+  const computer = updateGame(reset, { type: "mode", mode: "computer" });
+  assert.equal(updateGame(computer, { type: "undo-score-reset" }), computer);
+
+  const local = updateGame(computer, { type: "mode", mode: "local" });
+  const nextWin = finishPlayerOneWin(local);
+  const restored = updateGame(nextWin, { type: "undo-score-reset" });
+  assert.deepEqual(restored.scores.local, { one: 2, two: 0, draw: 0 });
+  assert.equal(restored.scores.computer, nextWin.scores.computer);
+  assert.equal(restored.board, nextWin.board);
+  assert.equal(updateGame(restored, { type: "undo-score-reset" }), restored);
 });
 
 test("replacing the board invalidates queued moves, while reselecting a setting preserves the round", () => {

@@ -12,12 +12,18 @@ test("reports each winning line, a draw, and an unfinished board", () => {
   ];
   for (const line of lines) {
     const board = line.reduce((board, index) => playMove(board, index, "one"), emptyBoard());
-    assert.deepEqual(getResult(board), { winner: "one", line });
+    assert.deepEqual(getResult(board), { winner: "one", lines: [line] });
   }
   assert.deepEqual(getResult([
     "one", "two", "one", "one", "two", "two", "two", "one", "one",
-  ]), { winner: "draw", line: [] });
+  ]), { winner: "draw", lines: [] });
   assert.equal(getResult(emptyBoard()), null);
+});
+
+test("returns both lines when one move completes two diagonals", () => {
+  assert.deepEqual(getResult([
+    "one", "two", "one", "two", "one", "two", "one", "two", "one",
+  ]), { winner: "one", lines: [[0, 4, 8], [2, 4, 6]] });
 });
 
 test("all difficulties leave finished boards alone", () => {
